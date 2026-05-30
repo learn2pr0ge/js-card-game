@@ -26,5 +26,133 @@ jobs:
         with:
           model: opencode/qwen3.6-plus
           prompt: |
-            Review the codebase for TODO, FIXME, and HACK comments.
-            Group them by priority and create an issue with a summary.
+                              Review the entire codebase thoroughly for TODO, FIXME, HACK, XXX, TEMP, DEPRECATED,
+                    and NOTE comments. Perform a deep analysis of each found comment and its surrounding context.
+                  
+                  ## Step 1: Search & Collect
+                  
+                  Search ALL source files recursively (excluding node_modules, dist, .git, build, __pycache__):
+                    - Pattern: TODO, FIXME, HACK, XXX, TEMP, DEPRECATED, NOTE, BUG, OPTIMIZE
+                    - Collect: filename, line number, full comment text, surrounding 5 lines of context
+                    - Include comments in all formats: //, #, /*, --, <!-- -->
+                  
+                  ## Step 2: Analyze Each Comment
+                  
+                  For each found comment determine:
+                  1. **Priority** based on keyword:
+                    - 🔴 CRITICAL  → FIXME, BUG, XXX (broken or dangerous code)
+                    - 🟠 HIGH      → HACK, TEMP (workarounds, temporary solutions)
+                    - 🟡 MEDIUM    → TODO (planned improvements)
+                    - 🟢 LOW       → NOTE, OPTIMIZE, DEPRECATED (informational)
+                  
+                  2. **Effort estimate**:
+                    - Small  (< 1 hour)
+                    - Medium (1–4 hours)
+                    - Large  (> 4 hours)
+                  
+                  3. **Risk assessment**:
+                    - Does this affect security?
+                    - Does this affect performance?
+                    - Does this affect data integrity?
+                    - Is this blocking other work?
+                  
+                  4. **Category**:
+                    - Security vulnerability
+                    - Performance bottleneck
+                    - Technical debt
+                    - Missing feature
+                    - Refactoring needed
+                    - Documentation gap
+                    - Test coverage gap
+                  
+                  ## Step 3: Create Structured Report
+                  
+                  Format the GitHub issue body as follows:
+                  
+                  ---
+                  
+                  # 🔍 Code Annotation Audit Report
+                    
+                    ## 📊 Summary Statistics
+                    
+                    | Priority | Count | Files Affected |
+                    |----------|-------|----------------|
+                    | 🔴 Critical (FIXME/BUG) | X | list |
+                    | 🟠 High (HACK/TEMP) | X | list |
+                    | 🟡 Medium (TODO) | X | list |
+                    | 🟢 Low (NOTE/OPTIMIZE) | X | list |
+                    | **Total** | **X** | **X files** |
+                  
+                  ---
+                  
+                  ## 🔴 CRITICAL — Immediate Action Required
+                  
+                  ### [FIXME] Short description
+                  - **File**: `path/to/file.py:42`
+                  - **Comment**: `# FIXME: exact comment text`
+                  - **Context**: Brief explanation of what's broken
+                  - **Risk**: Security / Data loss / etc.
+                  - **Effort**: Small / Medium / Large
+                  - **Suggested fix**: Concrete recommendation
+                  
+                  ---
+                  
+                  ## 🟠 HIGH — Fix in Current Sprint
+                  
+                  ### [HACK] Short description
+                  - **File**: `path/to/file.js:128`
+                  - **Comment**: `// HACK: exact comment text`
+                  - **Context**: Why this workaround exists
+                  - **Risk**: Technical debt, fragile code
+                  - **Effort**: Medium
+                  - **Suggested fix**: Proper solution approach
+                  
+                  ---
+                  
+                  ## 🟡 MEDIUM — Planned Improvements
+                  
+                  ### [TODO] Short description
+                  - **File**: `path/to/file.ts:67`
+                  - **Comment**: `// TODO: exact comment text`
+                  - **Context**: What needs to be done
+                  - **Effort**: Small
+                  - **Suggested fix**: Implementation approach
+                  
+                  ---
+                  
+                  ## 🟢 LOW — Nice to Have
+                  
+                  (same format)
+                  
+                  ---
+                  
+                  ## 🎯 Top 3 Priority Actions
+                  
+                  1. **[filename:line]** — One sentence why this is most critical
+                  2. **[filename:line]** — One sentence
+                  3. **[filename:line]** — One sentence
+                  
+                  ---
+                  
+                  ## 📋 Full Index (all found comments)
+                    
+                    | # | File | Line | Type | Short Description | Priority | Effort |
+                    |---|------|------|------|-------------------|----------|--------|
+                    | 1 | `src/auth.py` | 42 | FIXME | SQL injection risk | 🔴 | Small |
+                    | 2 | `src/api.js` | 128 | HACK | Race condition workaround | 🟠 | Large |
+                  ...
+                  
+                  ---
+                  
+                  ## Step 4: Create GitHub Issue
+                  
+                  Create a GitHub issue with:
+                    - Title: "🔍 Code Annotation Audit: X items found (X critical)"
+                    - Labels: technical-debt, audit, needs-review
+                    - Assignees: (leave empty)
+                    - Body: the full report from Step 3
+                  
+                  After creating the issue, provide me with:
+                    - Issue URL
+                    - Total count of found items by priority
+                    - The single most dangerous item that needs immediate attention

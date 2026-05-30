@@ -8,7 +8,7 @@ const START_MESSAGE = '\nНачинаем бой!';
 
 const createBattleMessage = (attacker, cardName, defender, points) =>
   `\nИгрок '${attacker}' применил '${cardName}' против '${defender}' и нанес урон '${points}'`;
-
+// FIX
 const createGameState = (name1, health1, name2, health2) =>
   l(l(name1, health1), l(name2, health2));
 
@@ -18,7 +18,7 @@ const gameLoop = (health1, name1, health2, name2, log, cards) => {
   if (health1 <= 0) {
     return cons(`${name1} был убит`, log);
   }
-
+// HACK
   const card = random(cards);
   const cardName = getName(card);
   const points = damage(card, health2);

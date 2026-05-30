@@ -1,0 +1,157 @@
+name: Security Vulnerability Audit
+
+on:
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run npm audit
+        id: npm-audit
+        run: |
+          npm audit --json > npm-audit-results.json 2>&1 || true
+          echo "AUDIT_EXIT_CODE=$?" >> $GITHUB_ENV
+
+      - name: Run OpenCode Security Review
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/qwen3.6-plus
+          prompt: |
+            Perform a comprehensive security audit of the entire codebase.
+
+            ## Step 1: Check Dependencies
+            - Read npm-audit-results.json for known vulnerabilities
+            - Identify critical and high severity vulnerabilities
+            - Note affected packages and fix versions
+
+            ## Step 2: Scan for Hardcoded Secrets
+            - Search for API keys, passwords, tokens, private keys
+            - Look for patterns like: apiKey, secret, password, token, private_key
+            - Check config files, .env examples, and source code
+            - Exclude node_modules, dist, .git, build, __pycache__
+
+            ## Step 3: Analyze Common Vulnerabilities
+            - SQL/NoSQL injection risks
+            - XSS (Cross-Site Scripting) vectors
+            - CSRF vulnerabilities
+            - Insecure direct object references
+            - Authentication/authorization gaps
+            - Sensitive data exposure
+            - Insecure dependencies
+
+            ## Step 4: Review Security Headers & Config
+            - Check for CORS misconfigurations
+            - Review CSP headers if present
+            - Check rate limiting implementation
+            - Review input validation
+
+            ## Step 5: Create Security Report
+
+            Format the GitHub issue body as follows:
+
+            ---
+
+            # 🔒 Security Vulnerability Audit Report
+
+            ## 📊 Summary
+            | Severity | Count | Status |
+            |----------|-------|--------|
+            | 🔴 Critical | X | Immediate fix required |
+            | 🟠 High | X | Fix this sprint |
+            | 🟡 Medium | X | Plan for next sprint |
+            | 🟢 Low | X | Backlog |
+
+            ---
+
+            ## 🔴 CRITICAL Vulnerabilities
+
+            ### [VULN-001] Short title
+            - **Type**: SQL Injection / XSS / Hardcoded Secret / etc.
+            - **File**: `path/to/file.js:42`
+            - **Description**: What the vulnerability is
+            - **Impact**: What an attacker could do
+            - **CVSS**: Estimated score (if applicable)
+            - **Remediation**: Specific fix recommendation
+
+            ---
+
+            ## 🟠 HIGH Severity Issues
+
+            (same format)
+
+            ---
+
+            ## 🟡 MEDIUM Severity Issues
+
+            (same format)
+
+            ---
+
+            ## 🟢 LOW Severity Issues
+
+            (same format)
+
+            ---
+
+            ## 📦 Dependency Vulnerabilities (npm audit)
+
+            | Package | Severity | Vulnerable Versions | Patched Versions |
+            |---------|----------|---------------------|------------------|
+            | package-name | critical | < x.x.x | >= x.x.x |
+
+            ---
+
+            ## 🎯 Top 3 Immediate Actions
+
+            1. **[file:line]** — Why this is most dangerous
+            2. **[file:line]** — Why this needs attention
+            3. **[file:line]** — Quick win fix
+
+            ---
+
+            ## ✅ Security Checklist
+
+            - [ ] No hardcoded secrets in source code
+            - [ ] Input validation on all user inputs
+            - [ ] Authentication required for sensitive routes
+            - [ ] Rate limiting implemented
+            - [ ] Dependencies up to date
+            - [ ] Security headers configured
+            - [ ] Error messages don't leak sensitive info
+
+            ---
+
+            ## Step 6: Create GitHub Issue
+
+            Create a GitHub issue with:
+              - Title: "🔒 Security Audit: X vulnerabilities found (X critical)"
+              - Labels: security, vulnerability, needs-review
+              - Assignees: (leave empty)
+              - Body: the full report from Step 5
+
+            After creating the issue, provide:
+              - Issue URL
+              - Total count by severity
+              - The most critical vulnerability requiring immediate attention
