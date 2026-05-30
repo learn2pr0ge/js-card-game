@@ -17,21 +17,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Run npm audit
-        id: npm-audit
-        run: |
-          npm audit --json > npm-audit-results.json 2>&1 || true
-          echo "AUDIT_EXIT_CODE=$?" >> $GITHUB_ENV
-
       - name: Run OpenCode Security Review
         uses: anomalyco/opencode/github@latest
         env:
@@ -42,9 +27,10 @@ jobs:
             Perform a comprehensive security audit of the entire codebase.
 
             ## Step 1: Check Dependencies
-            - Read npm-audit-results.json for known vulnerabilities
+            - Read package.json and analyze all dependencies for known vulnerabilities
+            - Check for outdated packages and potential security risks
             - Identify critical and high severity vulnerabilities
-            - Note affected packages and fix versions
+            - Note affected packages and suggest fix versions
 
             ## Step 2: Scan for Hardcoded Secrets
             - Search for API keys, passwords, tokens, private keys
@@ -115,7 +101,7 @@ jobs:
 
             ---
 
-            ## 📦 Dependency Vulnerabilities (npm audit)
+            ## 📦 Dependency Vulnerabilities
 
             | Package | Severity | Vulnerable Versions | Patched Versions |
             |---------|----------|---------------------|------------------|
