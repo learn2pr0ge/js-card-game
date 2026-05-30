@@ -1,7 +1,7 @@
 // @ts-check
 
-import { cons, l, random } from '@hexlet/pairs-data';
-import { getName, damage } from './src/card.js';
+import { cons, l, random, isEmpty } from '@hexlet/pairs-data';
+import { getName, damage, validateString } from './src/card.js';
 
 const INITIAL_HEALTH = 10;
 const START_MESSAGE = '\nНачинаем бой!';
@@ -31,7 +31,13 @@ const gameLoop = (health1, name1, health2, name2, log, cards) => {
   return gameLoop(newHealth, name2, health1, name1, newLog, cards);
 };
 
-const run = (player1, player2, cards) =>
-  gameLoop(INITIAL_HEALTH, player1, INITIAL_HEALTH, player2, l(START_MESSAGE), cards);
+const run = (player1, player2, cards) => {
+  validateString(player1, 'player1');
+  validateString(player2, 'player2');
+  if (isEmpty(cards)) {
+    throw new Error('cards must not be empty');
+  }
+  return gameLoop(INITIAL_HEALTH, player1, INITIAL_HEALTH, player2, l(START_MESSAGE), cards);
+};
 
 export default (cards) => (name1, name2) => run(name1, name2, cards);
